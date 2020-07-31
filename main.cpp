@@ -1222,7 +1222,7 @@ VOID BATTLE_SLIME(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "スライムに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", sli.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1241,6 +1241,10 @@ VOID BATTLE_TREE(VOID)
 {
 	MY_SOUGEN_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_TREE_DRAW();
 
 	BATTLE_TREE_FLOW();
@@ -1252,7 +1256,7 @@ VOID BATTLE_TREE(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ツリーに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", tre.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1279,6 +1283,10 @@ VOID BATTLE_BEETLE(VOID)
 {
 	MY_SOUGEN_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_BEETLE_DRAW();
 
 	BATTLE_BEETLE_FLOW();
@@ -1290,7 +1298,7 @@ VOID BATTLE_BEETLE(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ビートルに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", bee.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1317,6 +1325,10 @@ VOID BATTLE_SPIDER(VOID)
 {
 	MY_SUNABA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_SPIDER_DRAW();
 
 	BATTLE_LIZARD_FLOW();
@@ -1328,7 +1340,7 @@ VOID BATTLE_SPIDER(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "スパイダーに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", spi.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1355,6 +1367,10 @@ VOID BATTLE_LIZARD(VOID)
 {
 	MY_SUNABA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_LIZARD_DRAW();
 
 	BATTLE_LIZARD_FLOW();
@@ -1366,7 +1382,7 @@ VOID BATTLE_LIZARD(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "リザードに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", liz.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1393,6 +1409,10 @@ VOID BATTLE_SCOPION(VOID)
 {
 	MY_SUNABA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_SCORPION_DRAW();
 
 	BATTLE_SCORPION_FLOW();
@@ -1404,7 +1424,7 @@ VOID BATTLE_SCOPION(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "スコーピオンに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", sco.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1431,6 +1451,10 @@ VOID BATTLE_CHICKEN(VOID)
 {
 	MY_NUMA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_CHICKEN_DRAW();
 
 	BATTLE_CHIKEN_FLOW();
@@ -1442,7 +1466,7 @@ VOID BATTLE_CHICKEN(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "チキンに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", chi.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1469,6 +1493,10 @@ VOID BATTLE_CAT(VOID)
 {
 	MY_NUMA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_CAT_DRAW();
 
 	BATTLE_CAT_FLOW();
@@ -1480,7 +1508,7 @@ VOID BATTLE_CAT(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ケットシーに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", cat.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1507,6 +1535,10 @@ VOID BATTLE_BONE(VOID)
 {
 	MY_NUMA_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_BONE_DRAW();
 
 	BATTLE_BONE_FLOW();
@@ -1518,7 +1550,7 @@ VOID BATTLE_BONE(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ボーンに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", bon.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1546,6 +1578,10 @@ VOID BATTLE_DRAGON(VOID)
 
 	MY_LAST_STAGE_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_DRAGON_DRAW();
 
 	BATTLE_DRAGON_FLOW();
@@ -1557,7 +1593,7 @@ VOID BATTLE_DRAGON(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ドラゴンに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", dra.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1584,6 +1620,10 @@ VOID BATTLE_KERBEROS(VOID)
 {
 	MY_LAST_STAGE_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_KERBEROS_DRAW();
 
 	BATTLE_KERBEROS_FLOW();
@@ -1595,7 +1635,7 @@ VOID BATTLE_KERBEROS(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ケルベロスに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", ker.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1622,6 +1662,10 @@ VOID BATTLE_KNIGHT(VOID)
 {
 	MY_LAST_STAGE_BACKGROUND_DRAW();
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_KNIGHT_DRAW();
 
 	BATTLE_KNIGHT_FLOW();
@@ -1633,7 +1677,7 @@ VOID BATTLE_KNIGHT(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ナイトに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", kni.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -1660,6 +1704,10 @@ VOID BATTLE_BOSS(VOID)
 {
 	MY_BOSS_BACKGROUND_DRAW();//ボス戦の背景を描画
 
+	MY_MESSAGE_BATTLE1();
+	MY_MESSAGE_BATTLE2();
+	MY_MESSAGE_BATTLE3();
+
 	MY_BOSS_DRAW();//ボスを描画
 
 	BATTLE_BOSS_FLOW();
@@ -1671,7 +1719,7 @@ VOID BATTLE_BOSS(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "ボスに%dダメージ", battle_random);
 	}
 
-	if (ENEMY_ATC_CHECK_DEF == TRUE) {
+	if (ENEMY_ATC_CHECK == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", bos.ATK - Myplayer.DEF + battle_random);
 	}
 
@@ -3245,7 +3293,7 @@ VOID BATTLE_SLIME_FLOW(VOID)
 				ENEMY_ATC_CHECK = TRUE;
 				Myplayer.HP -= sli.ATK - Myplayer.DEF + battle_random;
 			}
-			else
+			elseif(sli.ATK <= Myplayer.DEF)
 			{
 
 				player_ATC_CHECK = FALSE;
@@ -3258,10 +3306,14 @@ VOID BATTLE_SLIME_FLOW(VOID)
 	}
 	else if (sli.HP <= 0)
 	{
-		Myplayer.Keikenti += sli.Get_Keikenti;
-		Myplayer.Total_Keikenti += sli.Get_Keikenti;
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
+		ENEMY_ATC_CHECK = FALSE;
+		ENEMY_ATC_CHECK_DEF = FALSE;
+
+		Myplayer.Keikenti += sli.Get_Keikenti;
+		Myplayer.Total_Keikenti += sli.Get_Keikenti;
+
 
 		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
 		{
@@ -3299,10 +3351,16 @@ VOID BATTLE_TREE_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > tre.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				tre.HP -= Myplayer.ATK - tre.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				tre.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3371,10 +3429,16 @@ VOID BATTLE_BEETLE_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > bee.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				bee.HP -= Myplayer.ATK - bee.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				bee.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3444,10 +3508,16 @@ VOID BATTLE_LIZARD_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > liz.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				liz.HP -= Myplayer.ATK - liz.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				liz.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3516,10 +3586,16 @@ VOID BATTLE_SCORPION_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > sco.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				sco.HP -= Myplayer.ATK - sco.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				sco.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3588,10 +3664,16 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > spi.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				spi.HP -= Myplayer.ATK - spi.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				spi.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3661,10 +3743,16 @@ VOID BATTLE_CAT_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > cat.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				cat.HP -= Myplayer.ATK - cat.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				cat.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3733,10 +3821,16 @@ VOID BATTLE_CHIKEN_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > chi.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				chi.HP -= Myplayer.ATK - chi.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				chi.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3805,10 +3899,16 @@ VOID BATTLE_BONE_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > bon.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				bon.HP -= Myplayer.ATK - bon.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				bon.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3877,10 +3977,16 @@ VOID BATTLE_DRAGON_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > dra.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				dra.HP -= Myplayer.ATK - dra.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				dra.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3950,10 +4056,16 @@ VOID BATTLE_KERBEROS_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > ker.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				ker.HP -= Myplayer.ATK - ker.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				ker.HP -= battle_random;
 			}
 			Totalturn++;
@@ -3983,6 +4095,8 @@ VOID BATTLE_KERBEROS_FLOW(VOID)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
+		ENEMY_ATC_CHECK = FALSE;
+		ENEMY_ATC_CHECK_DEF = FALSE;
 		Myplayer.Keikenti += ker.Get_Keikenti;
 		Myplayer.Total_Keikenti += ker.Get_Keikenti;
 
@@ -4022,10 +4136,16 @@ VOID BATTLE_KNIGHT_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > kni.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				kni.HP -= Myplayer.ATK - kni.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				kni.HP -= battle_random;
 			}
 			Totalturn++;
@@ -4094,10 +4214,16 @@ VOID BATTLE_BOSS_FLOW(VOID)
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > bos.DEF)
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK = TRUE;
 				bos.HP -= Myplayer.ATK - bos.DEF + battle_random;
 			}
 			else
 			{
+				ENEMY_ATC_CHECK = FALSE;
+				ENEMY_ATC_CHECK_DEF = FALSE;
+				player_ATC_CHECK_DEF = TRUE;
 				bos.HP -= battle_random;
 			}
 			Totalturn++;
