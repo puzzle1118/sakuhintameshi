@@ -40,7 +40,7 @@
 
 #define MOJI_GAME_OVER "BACKIMAGE\\GAME_OVER.png"
 
-#define MAP_1   "MAPIMAGE\\map_hashi_kakudai.png"
+#define MAP_1   "MAPIMAGE\\map_2.png"
 
 #define MAP_CSV_1    "MAPIMAGE\\map_54_64.csv"
 
@@ -109,8 +109,7 @@
 #define MAP_NOTUP_KIND      16
 #define MAP_NOTLEFT_KIND    16
 #define MAP_NOTRIGHT_KIND   16
-#define OFF_HIT 1
-#define ON_HIT  1
+#define MAP_RECOVERY  3
 #define GAME_MAP_GOAL_KIND      3  //ゴールの種類
 
 #define MAP_SOUGEN  1 //マップチップの草原(敵キャラの出現を分ける用)
@@ -150,14 +149,18 @@ enum GAME_SCENE {
 	GAME_SCENE_END		//エンド画面
 };
 
+enum MESSAGE_FLOW
+{
+	KILL_MSG,
+	KEIKEN_MSG,
+	LEVEL_UP_MSG,
+	BACK_PLAY
+};
+
 enum MAP_IMAGE {
-	M_N = -1,
-	M_B = 19,
-	M_G_T = 6,
-	M_BLO = 67,
-	M_ON = 125,
-	M_OFF = 126,
-	M_AM = 95,
+	M_GRASS = 0,
+	M_SAND,
+	M_LAST,
 	M_END = 399
 };
 
@@ -278,6 +281,7 @@ typedef struct STRUCT_PLAYER
 
 	int Lv;
 	int Keikenti;
+	int MAX_HP;
 	int HP;
 	int ATK;
 	int DEF;
@@ -452,6 +456,14 @@ BOOL player_ATC_CHECK_DEF = FALSE;				//プレイヤーが攻撃したときのメッセージを出
 BOOL ENEMY_ATC_CHECK = FALSE;				//敵が攻撃したときのメッセージを出力するするかどうかを判断する
 BOOL ENEMY_ATC_CHECK_DEF = FALSE;				//敵が攻撃したときのメッセージを出力するするかどうかを判断する(プレイヤーの防御力が敵の攻撃力を上回った場合)
 
+BOOL MSG_CHECK_1 = FALSE;
+BOOL MSG_CHECK_2 = FALSE;
+BOOL MSG_CHECK_3 = FALSE;
+BOOL MSG_CHECK_4 = FALSE;
+BOOL MSG_CHECK_5 = FALSE;
+
+BOOL CHECK_SCENE_PLAY = FALSE;
+
 int ScrollDistPlusYoko = 1;
 
 MAP MapImage;
@@ -546,6 +558,8 @@ int ZankiDrawCountMax = 60;
 int UntilZankiDrawCount = 0;
 int UntilZankiDrawCountMax = 60;
 
+int push_count = 0;
+
 BOOL tyakuti = FALSE;
 
 int PlayerImageNum[CHARA_MOTION_NUM] = {
@@ -563,8 +577,7 @@ int MapOKDownKind[MAP_OKDOWN_KIND] = { -1 };
 int MapNotLeftKind[MAP_NOTLEFT_KIND] = { 8,9,10,11,12,14,20,90,102,103,109,110, 117,121,126,139 };
 int MapNotRightKind[MAP_NOTRIGHT_KIND] = { 8,9,10,11,12,14,20,90,102,103,109,110, 117,121,126,139 };
 
-int OffHit[OFF_HIT] = { 126 };
-int OnHit[ON_HIT] = { 125 };
+int recovery[MAP_RECOVERY] = { 137, 138, 145 };
 
 int MapGoalKind[GAME_MAP_GOAL_KIND] = { 204,224 };
 
@@ -598,6 +611,10 @@ RECT rectMap_Last_Stage_First[MAP_TATE][MAP_YOKO];
 
 RECT rectMap_Boss[MAP_TATE][MAP_YOKO];
 RECT rectMap_Boss_First[MAP_TATE][MAP_YOKO];
+
+RECT rectMap_recovery[MAP_TATE][MAP_YOKO];
+RECT rectMap_recovery_First[MAP_TATE][MAP_YOKO];
+
 
 RECT rectMap_RightNG[MAP_TATE][MAP_YOKO];
 RECT rectMap_RightNG_First[MAP_TATE][MAP_YOKO];
@@ -1230,6 +1247,32 @@ VOID BATTLE_SLIME(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スライムが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スライムを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", sli.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
+	//if (CHECK_SCENE_PLAY == TRUE)
+	//{
+	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+	//}
+
 	//if (AllKeyState[KEY_INPUT_SPACE] != 0)	//エンターキーが押されていた時
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1264,6 +1307,25 @@ VOID BATTLE_TREE(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ツリーが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ツリーを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", tre.Get_Keikenti);
+	}
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
 	//if (tre.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1304,6 +1366,27 @@ VOID BATTLE_BEETLE(VOID)
 
 	if (ENEMY_ATC_CHECK_DEF == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
+	}
+
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ビートルが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ビートルを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", bee.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
 	}
 
 	//if (bee.HP < 0 || Myplayer.HP < 0)
@@ -1348,6 +1431,27 @@ VOID BATTLE_SPIDER(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スパイダーが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スパイダーを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", spi.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (liz.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1388,6 +1492,27 @@ VOID BATTLE_LIZARD(VOID)
 
 	if (ENEMY_ATC_CHECK_DEF == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
+	}
+
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "リザードが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "リザードを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", liz.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
 	}
 
 	//if (liz.HP < 0 || Myplayer.HP < 0)
@@ -1432,6 +1557,27 @@ VOID BATTLE_SCOPION(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スコーピオンが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "スコーピオンを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", sco.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (sco.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1472,6 +1618,27 @@ VOID BATTLE_CHICKEN(VOID)
 
 	if (ENEMY_ATC_CHECK_DEF == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
+	}
+
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "チキンが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "チキンを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", chi.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
 	}
 
 	//if (chi.HP < 0 || Myplayer.HP < 0)
@@ -1516,6 +1683,27 @@ VOID BATTLE_CAT(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ケットシーが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ケットシーを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", cat.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (cat.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1556,6 +1744,27 @@ VOID BATTLE_BONE(VOID)
 
 	if (ENEMY_ATC_CHECK_DEF == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
+	}
+
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ボーンが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ボーンを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", bon.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
 	}
 
 	//if (bon.HP < 0 || Myplayer.HP < 0)
@@ -1601,6 +1810,27 @@ VOID BATTLE_DRAGON(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ドラゴンが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ドラゴンを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", dra.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (dra.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1641,6 +1871,27 @@ VOID BATTLE_KERBEROS(VOID)
 
 	if (ENEMY_ATC_CHECK_DEF == TRUE) {
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
+	}
+
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ケルベロスが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ケルベロスを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", ker.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
 	}
 
 	//if (ker.HP < 0 || Myplayer.HP < 0)
@@ -1685,6 +1936,27 @@ VOID BATTLE_KNIGHT(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ナイトが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ナイトを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", kni.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (kni.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1727,6 +1999,27 @@ VOID BATTLE_BOSS(VOID)
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "プレイヤーに%dダメージ", battle_random);
 	}
 
+	if (MSG_CHECK_1 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ボスが現れた", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_2 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "ボスを倒した", GetColor(255, 255, 255));
+	}
+
+	if (MSG_CHECK_3 == TRUE)
+	{
+		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "経験値を%d手に入れた", bos.Get_Keikenti);
+	}
+
+	if (MSG_CHECK_4 == TRUE)
+	{
+		DrawString(240, GAME_HEIGHT - 160, "プレイヤーのレベルが", GetColor(255, 255, 255));
+		DrawFormatString(240, GAME_HEIGHT - 130, GetColor(255, 255, 255), "%dに上がった", Myplayer.Lv);
+	}
+
 	//if (bos.HP < 0 || Myplayer.HP < 0)
 	//{
 	//	GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
@@ -1758,6 +2051,12 @@ VOID MY_GAME_PLAY(VOID)
 	KERBEROS_INIT(&ker);
 	KNIGHT_INIT(&kni);
 	BOSS_INIT(&bos);
+
+	CHECK_SCENE_PLAY = FALSE;
+	push_count = 0;
+	random = 0;
+	Totalturn = 0;
+	turn = 0;
 
 	if (CheckSoundMem(MUSIC_BGM_PLAY.Handle) == 0)
 	{
@@ -1852,6 +2151,14 @@ VOID MY_GAME_PLAY(VOID)
 					}
 				}
 			}
+		}
+	}
+
+	if (MY_CHECK_RECT_ATARI_CHARA_MAP(Myplayer.atariRect, rectMap_recovery) == TRUE)
+	{
+		if (Myplayer.HP < Myplayer.MAX_HP)
+		{
+			Myplayer.HP = Myplayer.MAX_HP;
 		}
 	}
 
@@ -1968,6 +2275,8 @@ VOID MY_GAME_PLAY(VOID)
 		GameSceneNow = (int)GAME_SCENE_ENEMY_13;
 	}
 
+
+
 	//MY_PLAYER_OPERATION();
 
 	MY_PLAY_BACKIMAGE_DRAW();//背景を描画
@@ -2035,7 +2344,7 @@ BOOL MY_PLAY_CHECK_GAME_END(VOID)
 	int PlayerToMapNumX = (Myplayer.MoveDist_x + Myplayer.C_Width) / MAP_OneBlock_TATE_SIZE;
 
 
-	//プレイヤー画面外に落ちたとき
+	//プレイヤーのHPが０になったとき
 	if (Myplayer.HP <= 0)
 	{
 		ChangeVolumeSoundMem(255 * 80 / 100, MUSIC_SE_GAME_OVER.Handle);
@@ -2078,14 +2387,6 @@ VOID MY_GAME_END(VOID)
 		GameSceneNow = (int)GAME_SCENE_TITLE;	//シーンをタイトル画面にする
 	}
 
-	MapData[16][17] = (int)M_N;
-
-	MapData[17][53] = (int)M_N;
-
-	MapData[16][108] = (int)M_N;
-	MapData[14][109] = (int)M_N;
-	MapData[12][110] = (int)M_N;
-	MapData[10][111] = (int)M_N;
 	/*for (int o = first; o <= fourth; o++)
 
 		if (PlayerToMapNumY - 1 == 17 && PlayerToMapNumX == 53)
@@ -2536,6 +2837,7 @@ BOOL MY_INIT_PLAYER(PLAYER* p, CHARA c, int* num, int x, int y, int speed)
 	p->ATK = 5;
 	p->DEF = 2;
 	p->HP = 30;
+	p->MAX_HP = 30;
 	p->LvUp_KEIKENTI = 5;
 	p->Total_Keikenti = 0;
 
@@ -2650,7 +2952,6 @@ VOID KERBEROS_INIT(KERBEROS* kerb)
 	kerb->DEF = 42;
 	kerb->HP = 104;
 
-
 }
 
 VOID KNIGHT_INIT(KNIGHT* knig)
@@ -2660,7 +2961,6 @@ VOID KNIGHT_INIT(KNIGHT* knig)
 	knig->DEF = 50;
 	knig->HP = 140;
 
-
 }
 
 VOID BOSS_INIT(BOSS_BATTLE* boba)
@@ -2669,7 +2969,6 @@ VOID BOSS_INIT(BOSS_BATTLE* boba)
 	boba->ATK = 80;
 	boba->DEF = 30;
 	boba->HP = 800;
-
 
 }
 
@@ -3013,6 +3312,12 @@ VOID MY_PLAYER_OPERATION(VOID)
 			rectMap_Boss[tate][yoko].top = rectMap_Boss_First[tate][yoko].top - ScrollCntTate;
 			rectMap_Boss[tate][yoko].bottom = rectMap_Boss_First[tate][yoko].bottom - ScrollCntTate;
 
+			rectMap_recovery[tate][yoko].left = rectMap_recovery_First[tate][yoko].left - ScrollCntYoko;
+			rectMap_recovery[tate][yoko].right = rectMap_recovery_First[tate][yoko].right - ScrollCntYoko;
+
+			rectMap_recovery[tate][yoko].top = rectMap_recovery_First[tate][yoko].top - ScrollCntTate;
+			rectMap_recovery[tate][yoko].bottom = rectMap_recovery_First[tate][yoko].bottom - ScrollCntTate;
+
 		}
 	}
 	return;
@@ -3228,7 +3533,22 @@ BOOL MY_MAP_READ_CSV_NUM(FILE* fp, const char* path)
 					rectMap_UpNG_First[tate][yoko] = rectMap_UpNG[tate][yoko];
 				}
 			}
+
+			for (cnt = 0; cnt < MAP_RECOVERY; cnt++)
+			{
+				if (MapData[tate][yoko] == recovery[cnt])
+				{
+					rectMap_recovery[tate][yoko].left = yoko * MAP_OneBlock_YOKO_SIZE + 1;
+					rectMap_recovery[tate][yoko].top = tate * MAP_OneBlock_TATE_SIZE + 1;
+					rectMap_recovery[tate][yoko].right = (yoko + 1) * MAP_OneBlock_YOKO_SIZE - 1;
+					rectMap_recovery[tate][yoko].bottom = (tate + 1) * MAP_OneBlock_TATE_SIZE - 1;
+
+					rectMap_recovery_First[tate][yoko] = rectMap_recovery[tate][yoko];
+				}
+			}
 		}
+
+
 	}
 	return TRUE;
 }
@@ -3262,11 +3582,12 @@ VOID BATTLE_SLIME_FLOW(VOID)
 	if (Myplayer.HP > 0 && sli.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] != 0)
+		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
 		{
 			battle_random = rand() % 3;
 			if (Myplayer.ATK > sli.DEF)
 			{
+				//MSG_CHECK_1 = FALSE;
 				ENEMY_ATC_CHECK = FALSE;
 				ENEMY_ATC_CHECK_DEF = FALSE;
 				player_ATC_CHECK = TRUE;
@@ -3275,6 +3596,7 @@ VOID BATTLE_SLIME_FLOW(VOID)
 			}
 			else
 			{
+				//MSG_CHECK_1 = FALSE;
 				ENEMY_ATC_CHECK = FALSE;
 				ENEMY_ATC_CHECK_DEF = FALSE;
 				player_ATC_CHECK_DEF = TRUE;
@@ -3293,7 +3615,7 @@ VOID BATTLE_SLIME_FLOW(VOID)
 				ENEMY_ATC_CHECK = TRUE;
 				Myplayer.HP -= sli.ATK - Myplayer.DEF + battle_random;
 			}
-			elseif(sli.ATK <= Myplayer.DEF)
+			else if (sli.ATK <= Myplayer.DEF)
 			{
 
 				player_ATC_CHECK = FALSE;
@@ -3315,7 +3637,86 @@ VOID BATTLE_SLIME_FLOW(VOID)
 		Myplayer.Total_Keikenti += sli.Get_Keikenti;
 
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
+		{
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
+		}
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+			//		random = 0;
+			//		Totalturn = 0;
+			//		turn = 0;
+		}
+		//if (AllKeyState[KEY_INPUT_RETURN] == 1 && push_count==0)
+		//{
+		//	DrawString(240, GAME_HEIGHT - 160, "スライムを倒した", GetColor(255, 255, 255));
+
+		//	if (AllKeyState[KEY_INPUT_RETURN] == 1)
+		//	{
+		//		push_count += 1;
+		//	}
+		//	if (push_count == 1)
+		//	{
+		//		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//		random = 0;
+		//		Totalturn = 0;
+		//		turn = 0;
+		//	}
+		//}
+
+
+		/*if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
 		{
 			Myplayer.Lv += 1;
 			Myplayer.ATK += 2;
@@ -3323,12 +3724,8 @@ VOID BATTLE_SLIME_FLOW(VOID)
 			Myplayer.HP += 3;
 			Myplayer.Keikenti = 0;
 			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
-		}
+		}*/
 
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3393,20 +3790,80 @@ VOID BATTLE_TREE_FLOW(VOID)
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3472,20 +3929,81 @@ VOID BATTLE_BEETLE_FLOW(VOID)
 		Myplayer.Keikenti += bee.Get_Keikenti;
 		Myplayer.Total_Keikenti += bee.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3550,20 +4068,81 @@ VOID BATTLE_LIZARD_FLOW(VOID)
 		Myplayer.Keikenti += liz.Get_Keikenti;
 		Myplayer.Total_Keikenti += liz.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3628,20 +4207,81 @@ VOID BATTLE_SCORPION_FLOW(VOID)
 		Myplayer.Keikenti += sco.Get_Keikenti;
 		Myplayer.Total_Keikenti += sco.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3707,20 +4347,81 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 		Myplayer.Keikenti += spi.Get_Keikenti;
 		Myplayer.Total_Keikenti += spi.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3785,20 +4486,82 @@ VOID BATTLE_CAT_FLOW(VOID)
 		Myplayer.Keikenti += cat.Get_Keikenti;
 		Myplayer.Total_Keikenti += cat.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.MAX_HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3863,20 +4626,81 @@ VOID BATTLE_CHIKEN_FLOW(VOID)
 		Myplayer.Keikenti += chi.Get_Keikenti;
 		Myplayer.Total_Keikenti += chi.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -3941,20 +4765,81 @@ VOID BATTLE_BONE_FLOW(VOID)
 		Myplayer.Keikenti += bon.Get_Keikenti;
 		Myplayer.Total_Keikenti += bon.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -4019,20 +4904,81 @@ VOID BATTLE_DRAGON_FLOW(VOID)
 		Myplayer.Keikenti += dra.Get_Keikenti;
 		Myplayer.Total_Keikenti += dra.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -4100,20 +5046,81 @@ VOID BATTLE_KERBEROS_FLOW(VOID)
 		Myplayer.Keikenti += ker.Get_Keikenti;
 		Myplayer.Total_Keikenti += ker.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -4178,20 +5185,81 @@ VOID BATTLE_KNIGHT_FLOW(VOID)
 		Myplayer.Keikenti += kni.Get_Keikenti;
 		Myplayer.Total_Keikenti += kni.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
@@ -4256,20 +5324,81 @@ VOID BATTLE_BOSS_FLOW(VOID)
 		Myplayer.Keikenti += bos.Get_Keikenti;
 		Myplayer.Total_Keikenti += bon.Get_Keikenti;
 
-		if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
-			Myplayer.Lv += 1;
-			Myplayer.ATK += 2;
-			Myplayer.DEF += 2;
-			Myplayer.HP += 3;
-			Myplayer.Keikenti = 0;
+			switch (push_count)
+			{
+			case KILL_MSG:
+				MSG_CHECK_2 = TRUE;
 
-			Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+				push_count++;
+
+				break;
+
+			case KEIKEN_MSG:
+				MSG_CHECK_2 = FALSE;
+
+				MSG_CHECK_3 = TRUE;
+
+				push_count++;
+
+				break;
+
+			case LEVEL_UP_MSG:
+
+				MSG_CHECK_3 = FALSE;
+
+				if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+				{
+					Myplayer.Lv += 1;
+					Myplayer.ATK += 2;
+					Myplayer.DEF += 2;
+					Myplayer.HP += 3;
+					Myplayer.MAX_HP += 3;
+					Myplayer.Keikenti = 0;
+					Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+					MSG_CHECK_4 = TRUE;
+					push_count++;
+				}
+				else
+				{
+					CHECK_SCENE_PLAY = TRUE;
+					push_count++;
+				}
+
+				break;
+
+			case BACK_PLAY:
+
+				MSG_CHECK_4 = FALSE;
+				CHECK_SCENE_PLAY = TRUE;
+
+				break;
+			default:
+				break;
+			}
 		}
-		GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
-		random = 0;
-		Totalturn = 0;
-		turn = 0;
+
+		if (CHECK_SCENE_PLAY == TRUE)
+		{
+			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		}
+
+
+		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
+		//{
+		//	Myplayer.Lv += 1;
+		//	Myplayer.ATK += 2;
+		//	Myplayer.DEF += 2;
+		//	Myplayer.HP += 3;
+		//	Myplayer.Keikenti = 0;
+
+		//	Myplayer.LvUp_KEIKENTI = Myplayer.LvUp_KEIKENTI * 2;
+		//}
+		//GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
+		//random = 0;
+		//Totalturn = 0;
+		//turn = 0;
 	}
 	else if (Myplayer.HP <= 0)
 	{
