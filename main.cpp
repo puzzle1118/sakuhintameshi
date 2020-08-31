@@ -38,6 +38,8 @@
 #define MESSAGE_WINDOW_BATTLE2 "MessageWindow\\message_window_battle2.png"
 #define MESSAGE_WINDOW_BATTLE3 "MessageWindow\\message_window_battle3.png"
 
+#define MESSAGE_WINDOW_RECOVERY "MessageWindow\\Message_Window_1.png"
+
 #define MOJI_GAME_OVER "BACKIMAGE\\GAME_OVER.png"
 
 #define MAP_1   "MAPIMAGE\\map_2.png"
@@ -120,6 +122,8 @@
 
 #define BOSS_STAGE 2
 
+#define MAP_TETSU 3
+
 #define GAME_CHARA_SPEED      2//キャラのスピード
 
 #define GRAVITY    9.8067 //重力加速度
@@ -155,6 +159,11 @@ enum MESSAGE_FLOW
 	KEIKEN_MSG,
 	LEVEL_UP_MSG,
 	BACK_PLAY
+};
+
+enum MESSAGE_RECOVERY
+{
+	RCR_MSG
 };
 
 enum MAP_IMAGE {
@@ -200,6 +209,7 @@ GAZOU BACK_TITLE;
 GAZOU MESSAGE_WIN_BATTLE1;
 GAZOU MESSAGE_WIN_BATTLE2;
 GAZOU MESSAGE_WIN_BATTLE3;
+GAZOU MESSAGE_WIN_RECOVERY;
 GAZOU BACK_SOUSA;
 GAZOU BACK_OVER;
 GAZOU IMAGESLIME;
@@ -464,6 +474,8 @@ BOOL MSG_CHECK_5 = FALSE;
 
 BOOL CHECK_SCENE_PLAY = FALSE;
 
+BOOL MSG_RECOVERY = FALSE;
+
 int ScrollDistPlusYoko = 1;
 
 MAP MapImage;
@@ -615,7 +627,6 @@ RECT rectMap_Boss_First[MAP_TATE][MAP_YOKO];
 RECT rectMap_recovery[MAP_TATE][MAP_YOKO];
 RECT rectMap_recovery_First[MAP_TATE][MAP_YOKO];
 
-
 RECT rectMap_RightNG[MAP_TATE][MAP_YOKO];
 RECT rectMap_RightNG_First[MAP_TATE][MAP_YOKO];
 
@@ -690,6 +701,8 @@ VOID MY_MESSAGE_BATTLE1(VOID);//バトル画面のメッセージウィンドウを表示する関数
 VOID MY_MESSAGE_BATTLE2(VOID);//バトル画面のメッセージウィンドウを表示する関数
 VOID MY_MESSAGE_BATTLE3(VOID);//バトル画面のメッセージウィンドウを表示する関数
 
+VOID MY_MESSAGE_RECOVERY(VOID);//回復時のメッセージウィンドウを表示する関数
+
 VOID MY_SLIME_DRAW(VOID);
 VOID MY_TREE_DRAW(VOID);
 VOID MY_BEETLE_DRAW(VOID);
@@ -715,6 +728,8 @@ BOOL MAP_INIT(MAP*, int, int, int, int, int, const char*);
 VOID MY_TIMER(VOID);
 
 BOOL MY_MUSIC_LOAD(MUSIC*, const char*);
+
+VOID MAP_RECOVERY_MSG(VOID);
 
 VOID BATTLE_SLIME(VOID);
 VOID BATTLE_TREE(VOID);
@@ -802,6 +817,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (!BACKGROUND_LOAD(&MESSAGE_WIN_BATTLE3, 0, 0, MESSAGE_WINDOW_BATTLE3))
+	{
+		return -1;
+	}
+
+	if (!BACKGROUND_LOAD(&MESSAGE_WIN_RECOVERY, 0, 0, MESSAGE_WINDOW_RECOVERY))
 	{
 		return -1;
 	}
@@ -1232,7 +1252,10 @@ VOID BATTLE_SLIME(VOID)
 	MY_SLIME_DRAW();
 
 	BATTLE_SLIME_FLOW();
+
 	if (player_ATC_CHECK == TRUE) {
+
+
 		DrawFormatString(240, GAME_HEIGHT - 160, GetColor(255, 255, 255), "スライムに%dダメージ", Myplayer.ATK - sli.DEF + battle_random);
 	}
 	if (player_ATC_CHECK_DEF == TRUE) {
@@ -2154,13 +2177,7 @@ VOID MY_GAME_PLAY(VOID)
 		}
 	}
 
-	if (MY_CHECK_RECT_ATARI_CHARA_MAP(Myplayer.atariRect, rectMap_recovery) == TRUE)
-	{
-		if (Myplayer.HP < Myplayer.MAX_HP)
-		{
-			Myplayer.HP = Myplayer.MAX_HP;
-		}
-	}
+
 
 	//if (MY_PLAY_CHECK_GAME_END() == TRUE)
 	//{
@@ -2275,8 +2292,6 @@ VOID MY_GAME_PLAY(VOID)
 		GameSceneNow = (int)GAME_SCENE_ENEMY_13;
 	}
 
-
-
 	//MY_PLAYER_OPERATION();
 
 	MY_PLAY_BACKIMAGE_DRAW();//背景を描画
@@ -2288,6 +2303,28 @@ VOID MY_GAME_PLAY(VOID)
 	//DrawBox(Myplayer.atariRect.left, Myplayer.atariRect.top, Myplayer.atariRect.right, Myplayer.atariRect.bottom, GetColor(255, 0, 0), TRUE);
 
 	DrawFormatStringToHandle(260, 0, GetColor(255, 255, 255), FONTHANDLE_TAMESHI, "経過時間%0.2lf秒", (Time1 - Time2) / 1000);
+
+	if (MY_CHECK_RECT_ATARI_CHARA_MAP(Myplayer.atariRect, rectMap_recovery) == TRUE)
+	{
+		if (Myplayer.HP < Myplayer.MAX_HP)
+		{
+			Myplayer.HP = Myplayer.MAX_HP;
+			MSG_RECOVERY = TRUE;
+
+		}
+	}
+
+	if (MSG_RECOVERY == TRUE)
+	{
+
+		MY_MESSAGE_RECOVERY();
+
+		DrawString(240, GAME_HEIGHT - 150, "HPが回復した", GetColor(255, 255, 255));
+
+		DrawString(240, GAME_HEIGHT - 80, "Push Enter", GetColor(255, 255, 255));
+
+	}
+	MAP_RECOVERY_MSG();
 
 	MY_PLAY_PLAYER_DRAW();
 
@@ -2599,6 +2636,12 @@ VOID MY_MESSAGE_BATTLE2(VOID)
 VOID MY_MESSAGE_BATTLE3(VOID)
 {
 	DrawGraph(MESSAGE_WIN_BATTLE3.X, MESSAGE_WIN_BATTLE3.Y, MESSAGE_WIN_BATTLE3.Handle, TRUE);
+}
+
+//回復時のメッセージウィンドウを描画する関数
+VOID MY_MESSAGE_RECOVERY(VOID)
+{
+	DrawGraph(MESSAGE_WIN_RECOVERY.X, MESSAGE_WIN_RECOVERY.Y, MESSAGE_WIN_RECOVERY.Handle, TRUE);
 }
 
 //ゲームオーバー画面の背景を描画する関数
@@ -3582,48 +3625,59 @@ VOID BATTLE_SLIME_FLOW(VOID)
 	if (Myplayer.HP > 0 && sli.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > sli.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				//MSG_CHECK_1 = FALSE;
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				sli.HP -= Myplayer.ATK - sli.DEF + battle_random;
 
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > sli.DEF)
+				{
+					//MSG_CHECK_1 = FALSE;
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					sli.HP -= Myplayer.ATK - sli.DEF + battle_random;
+
+				}
+				else
+				{
+					//MSG_CHECK_1 = FALSE;
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					sli.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				//MSG_CHECK_1 = FALSE;
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				sli.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (sli.ATK > Myplayer.DEF)
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= sli.ATK - Myplayer.DEF + battle_random;
-			}
-			else if (sli.ATK <= Myplayer.DEF)
-			{
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
 
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
+			{
+				battle_random = rand() % 3;
+				if (sli.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= sli.ATK - Myplayer.DEF + battle_random;
+				}
+				else if (sli.ATK <= Myplayer.DEF)
+				{
+
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			Totalturn++;
 		}
 	}
 	else if (sli.HP <= 0)
@@ -3633,8 +3687,8 @@ VOID BATTLE_SLIME_FLOW(VOID)
 		ENEMY_ATC_CHECK = FALSE;
 		ENEMY_ATC_CHECK_DEF = FALSE;
 
-		Myplayer.Keikenti += sli.Get_Keikenti;
-		Myplayer.Total_Keikenti += sli.Get_Keikenti;
+		/*Myplayer.Keikenti += sli.Get_Keikenti;
+		Myplayer.Total_Keikenti += sli.Get_Keikenti;*/
 
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
@@ -3643,6 +3697,8 @@ VOID BATTLE_SLIME_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+				Myplayer.Keikenti += sli.Get_Keikenti;
+				Myplayer.Total_Keikenti += sli.Get_Keikenti;
 
 				push_count++;
 
@@ -3743,50 +3799,59 @@ VOID BATTLE_TREE_FLOW(VOID)
 	if (Myplayer.HP > 0 && tre.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > tre.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				tre.HP -= Myplayer.ATK - tre.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > tre.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					tre.HP -= Myplayer.ATK - tre.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					tre.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				tre.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (tre.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= tre.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (tre.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= tre.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (tre.HP <= 0)
 	{
-		Myplayer.Keikenti += tre.Get_Keikenti;
-		Myplayer.Total_Keikenti += tre.Get_Keikenti;
+
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
 
@@ -3795,8 +3860,11 @@ VOID BATTLE_TREE_FLOW(VOID)
 			switch (push_count)
 			{
 			case KILL_MSG:
+
 				MSG_CHECK_2 = TRUE;
 
+				Myplayer.Keikenti += tre.Get_Keikenti;
+				Myplayer.Total_Keikenti += tre.Get_Keikenti;
 				push_count++;
 
 				break;
@@ -3881,44 +3949,54 @@ VOID BATTLE_BEETLE_FLOW(VOID)
 	if (Myplayer.HP > 0 && bee.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > bee.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				bee.HP -= Myplayer.ATK - bee.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > bee.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					bee.HP -= Myplayer.ATK - bee.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					bee.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				bee.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (bee.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= bee.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (bee.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= bee.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (bee.HP <= 0)
@@ -3926,15 +4004,15 @@ VOID BATTLE_BEETLE_FLOW(VOID)
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
 
-		Myplayer.Keikenti += bee.Get_Keikenti;
-		Myplayer.Total_Keikenti += bee.Get_Keikenti;
-
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
 			switch (push_count)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += bee.Get_Keikenti;
+				Myplayer.Total_Keikenti += bee.Get_Keikenti;
 
 				push_count++;
 
@@ -4021,52 +4099,60 @@ VOID BATTLE_LIZARD_FLOW(VOID)
 	if (Myplayer.HP > 0 && liz.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > liz.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				liz.HP -= Myplayer.ATK - liz.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > liz.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					liz.HP -= Myplayer.ATK - liz.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					liz.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				liz.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (liz.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= liz.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (liz.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= liz.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (liz.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += liz.Get_Keikenti;
-		Myplayer.Total_Keikenti += liz.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4074,6 +4160,9 @@ VOID BATTLE_LIZARD_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += liz.Get_Keikenti;
+				Myplayer.Total_Keikenti += liz.Get_Keikenti;
 
 				push_count++;
 
@@ -4160,52 +4249,60 @@ VOID BATTLE_SCORPION_FLOW(VOID)
 	if (Myplayer.HP > 0 && sco.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > sco.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				sco.HP -= Myplayer.ATK - sco.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > sco.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					sco.HP -= Myplayer.ATK - sco.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					sco.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				sco.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (sco.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= sco.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (sco.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= sco.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (sco.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += sco.Get_Keikenti;
-		Myplayer.Total_Keikenti += sco.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4213,6 +4310,9 @@ VOID BATTLE_SCORPION_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += sco.Get_Keikenti;
+				Myplayer.Total_Keikenti += sco.Get_Keikenti;
 
 				push_count++;
 
@@ -4299,44 +4399,55 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 	if (Myplayer.HP > 0 && spi.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > spi.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				spi.HP -= Myplayer.ATK - spi.DEF + battle_random;
+				DrawString(20, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > spi.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					spi.HP -= Myplayer.ATK - spi.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					spi.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				spi.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (spi.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= spi.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (spi.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= spi.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 
@@ -4344,8 +4455,6 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += spi.Get_Keikenti;
-		Myplayer.Total_Keikenti += spi.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4353,6 +4462,9 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += spi.Get_Keikenti;
+				Myplayer.Total_Keikenti += spi.Get_Keikenti;
 
 				push_count++;
 
@@ -4407,7 +4519,6 @@ VOID BATTLE_SPIDER_FLOW(VOID)
 			GameSceneNow = (int)GAME_SCENE_PLAY;	//シーンをプレイ画面にする
 		}
 
-
 		//if (Myplayer.LvUp_KEIKENTI <= Myplayer.Keikenti)
 		//{
 		//	Myplayer.Lv += 1;
@@ -4439,52 +4550,60 @@ VOID BATTLE_CAT_FLOW(VOID)
 	if (Myplayer.HP > 0 && cat.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > cat.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				cat.HP -= Myplayer.ATK - cat.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > cat.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					cat.HP -= Myplayer.ATK - cat.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					cat.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				cat.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (cat.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= cat.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (cat.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= cat.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (cat.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += cat.Get_Keikenti;
-		Myplayer.Total_Keikenti += cat.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4492,6 +4611,9 @@ VOID BATTLE_CAT_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += cat.Get_Keikenti;
+				Myplayer.Total_Keikenti += cat.Get_Keikenti;
 
 				push_count++;
 
@@ -4579,52 +4701,60 @@ VOID BATTLE_CHIKEN_FLOW(VOID)
 	if (Myplayer.HP > 0 && chi.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > chi.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				chi.HP -= Myplayer.ATK - chi.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > chi.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					chi.HP -= Myplayer.ATK - chi.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					chi.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				chi.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (chi.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= chi.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (chi.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= chi.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (chi.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += chi.Get_Keikenti;
-		Myplayer.Total_Keikenti += chi.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4632,6 +4762,9 @@ VOID BATTLE_CHIKEN_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += chi.Get_Keikenti;
+				Myplayer.Total_Keikenti += chi.Get_Keikenti;
 
 				push_count++;
 
@@ -4718,52 +4851,60 @@ VOID BATTLE_BONE_FLOW(VOID)
 	if (Myplayer.HP > 0 && bon.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > bon.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				bon.HP -= Myplayer.ATK - bon.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > bon.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					bon.HP -= Myplayer.ATK - bon.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					bon.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				bon.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (bon.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= bon.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (bon.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= bon.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (bon.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += bon.Get_Keikenti;
-		Myplayer.Total_Keikenti += bon.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4771,6 +4912,9 @@ VOID BATTLE_BONE_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += bon.Get_Keikenti;
+				Myplayer.Total_Keikenti += bon.Get_Keikenti;
 
 				push_count++;
 
@@ -4857,52 +5001,60 @@ VOID BATTLE_DRAGON_FLOW(VOID)
 	if (Myplayer.HP > 0 && dra.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > dra.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				dra.HP -= Myplayer.ATK - dra.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > dra.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					dra.HP -= Myplayer.ATK - dra.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					dra.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				dra.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (dra.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= dra.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (dra.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= dra.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (dra.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += dra.Get_Keikenti;
-		Myplayer.Total_Keikenti += dra.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -4910,6 +5062,9 @@ VOID BATTLE_DRAGON_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += dra.Get_Keikenti;
+				Myplayer.Total_Keikenti += dra.Get_Keikenti;
 
 				push_count++;
 
@@ -4993,48 +5148,57 @@ VOID BATTLE_DRAGON_FLOW(VOID)
 
 VOID BATTLE_KERBEROS_FLOW(VOID)
 {
-
 	if (Myplayer.HP > 0 && ker.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > ker.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				ker.HP -= Myplayer.ATK - ker.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > ker.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					ker.HP -= Myplayer.ATK - ker.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					ker.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				ker.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (ker.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= ker.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (ker.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= ker.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (ker.HP <= 0)
@@ -5043,8 +5207,6 @@ VOID BATTLE_KERBEROS_FLOW(VOID)
 		player_ATC_CHECK_DEF = FALSE;
 		ENEMY_ATC_CHECK = FALSE;
 		ENEMY_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += ker.Get_Keikenti;
-		Myplayer.Total_Keikenti += ker.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -5052,6 +5214,9 @@ VOID BATTLE_KERBEROS_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += ker.Get_Keikenti;
+				Myplayer.Total_Keikenti += ker.Get_Keikenti;
 
 				push_count++;
 
@@ -5138,52 +5303,60 @@ VOID BATTLE_KNIGHT_FLOW(VOID)
 	if (Myplayer.HP > 0 && kni.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > kni.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				kni.HP -= Myplayer.ATK - kni.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > kni.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					kni.HP -= Myplayer.ATK - kni.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					kni.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				kni.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (kni.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= kni.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (kni.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= kni.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (kni.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += kni.Get_Keikenti;
-		Myplayer.Total_Keikenti += kni.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -5191,6 +5364,9 @@ VOID BATTLE_KNIGHT_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += kni.Get_Keikenti;
+				Myplayer.Total_Keikenti += kni.Get_Keikenti;
 
 				push_count++;
 
@@ -5277,52 +5453,60 @@ VOID BATTLE_BOSS_FLOW(VOID)
 	if (Myplayer.HP > 0 && bos.HP > 0)
 	{
 		turn = Totalturn % 2;
-		if (turn == 0 && AllKeyState[KEY_INPUT_A] == 1)
+		if (turn == 0)
 		{
-			battle_random = rand() % 3;
-			if (Myplayer.ATK > bos.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "A:攻撃", GetColor(255, 255, 255));
+			if (AllKeyState[KEY_INPUT_A] == 1)
 			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK = TRUE;
-				bos.HP -= Myplayer.ATK - bos.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (Myplayer.ATK > bos.DEF)
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK = TRUE;
+					bos.HP -= Myplayer.ATK - bos.DEF + battle_random;
+				}
+				else
+				{
+					ENEMY_ATC_CHECK = FALSE;
+					ENEMY_ATC_CHECK_DEF = FALSE;
+					player_ATC_CHECK_DEF = TRUE;
+					bos.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				ENEMY_ATC_CHECK = FALSE;
-				ENEMY_ATC_CHECK_DEF = FALSE;
-				player_ATC_CHECK_DEF = TRUE;
-				bos.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 
-		if (turn == 1 && AllKeyState[KEY_INPUT_RETURN] == 1)
+		if (turn == 1)
 		{
-			battle_random = rand() % 3;
-			if (bos.ATK > Myplayer.DEF)
+			DrawString(60, GAME_HEIGHT - 160, "Enter:", GetColor(255, 255, 255));
+			DrawString(80, GAME_HEIGHT - 130, "敵の行動", GetColor(255, 255, 255));
+
+			if (AllKeyState[KEY_INPUT_RETURN] == 1)
 			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK = TRUE;
-				Myplayer.HP -= bos.ATK - Myplayer.DEF + battle_random;
+				battle_random = rand() % 3;
+				if (bos.ATK > Myplayer.DEF)
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK = TRUE;
+					Myplayer.HP -= bos.ATK - Myplayer.DEF + battle_random;
+				}
+				else
+				{
+					player_ATC_CHECK = FALSE;
+					player_ATC_CHECK_DEF = FALSE;
+					ENEMY_ATC_CHECK_DEF = TRUE;
+					Myplayer.HP -= battle_random;
+				}
+				Totalturn++;
 			}
-			else
-			{
-				player_ATC_CHECK = FALSE;
-				player_ATC_CHECK_DEF = FALSE;
-				ENEMY_ATC_CHECK_DEF = TRUE;
-				Myplayer.HP -= battle_random;
-			}
-			Totalturn++;
 		}
 	}
 	else if (bos.HP <= 0)
 	{
 		player_ATC_CHECK = FALSE;
 		player_ATC_CHECK_DEF = FALSE;
-		Myplayer.Keikenti += bos.Get_Keikenti;
-		Myplayer.Total_Keikenti += bon.Get_Keikenti;
 
 		if (AllKeyState[KEY_INPUT_RETURN] == 1)
 		{
@@ -5330,6 +5514,9 @@ VOID BATTLE_BOSS_FLOW(VOID)
 			{
 			case KILL_MSG:
 				MSG_CHECK_2 = TRUE;
+
+				Myplayer.Keikenti += bos.Get_Keikenti;
+				Myplayer.Total_Keikenti += bos.Get_Keikenti;
 
 				push_count++;
 
@@ -5408,6 +5595,23 @@ VOID BATTLE_BOSS_FLOW(VOID)
 		Totalturn = 0;
 		turn = 0;
 		GameSceneNow = (int)GAME_SCENE_OVER;
+	}
+}
+
+VOID MAP_RECOVERY_MSG(VOID)
+{
+	if (AllKeyState[KEY_INPUT_RETURN] == 1)
+	{
+		switch (push_count)
+		{
+		case RCR_MSG:
+
+			MSG_RECOVERY = FALSE;
+			push_count = 0;
+
+		default:
+			break;
+		}
 	}
 }
 
